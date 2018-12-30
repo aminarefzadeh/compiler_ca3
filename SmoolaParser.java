@@ -1022,7 +1022,7 @@ public class SmoolaParser extends Parser {
 			((StatementAssignmentContext)_localctx).expression = expression();
 			setState(250);
 			match(T__8);
-			 ((StatementAssignmentContext)_localctx).sAssign =  new Assign(((BinaryExpression) ((StatementAssignmentContext)_localctx).expression.e).getLeft(), ((BinaryExpression) ((StatementAssignmentContext)_localctx).expression.e).getRight()); _localctx.sAssign.setLine(((StatementAssignmentContext)_localctx).expression.e.getLine());
+			 ((StatementAssignmentContext)_localctx).sAssign =  new Assign(((StatementAssignmentContext)_localctx).expression.e); _localctx.sAssign.setLine(((StatementAssignmentContext)_localctx).expression.e.getLine());
 			}
 		}
 		catch (RecognitionException re) {
@@ -2641,9 +2641,6 @@ public class SmoolaParser extends Parser {
 				match(T__4);
 
 				        ((ExpressionOtherContext)_localctx).e =  new NewClass(((ExpressionOtherContext)_localctx).identifier.id);
-				        UserDefinedType a = new UserDefinedType();
-				        a.setName(((ExpressionOtherContext)_localctx).identifier.id);
-				        _localctx.e.setType(a);
 				    
 				}
 				break;

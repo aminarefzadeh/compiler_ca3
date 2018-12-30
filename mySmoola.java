@@ -16,13 +16,9 @@ public class mySmoola {
         SmoolaParser parser = new SmoolaParser(tokens);   // SmoolaParser in your project
         Program p = parser.program().p; // program is the name of the start rule
         SymTableVisitor v1 = new SymTableVisitor();
-        if (v1.visitProgram(p)){
-          ProgramSymbolTable pst = v1.pst;
-          Phase3Visitor v2 = new Phase3Visitor();
-          if(v2.visitProgram(p,pst)){
-            VisitorImpl v3 = new VisitorImpl();
-            p.accept(v3);
-          }
-        }
+        v1.visitProgram(p);
+        ProgramSymbolTable pst = v1.pst;
+        Phase3Visitor v2 = new Phase3Visitor();
+        v2.visitProgram(p,pst);
     }
 }

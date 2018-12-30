@@ -9,7 +9,7 @@ public class SymbolTableMethodItem extends SymbolTableItem {
     ArrayList<Type> argTypes = new ArrayList<>();
     private Type returnType ;
 
-    public SymbolTableMethodItem(String name, ArrayList<Type> argTypes) {
+    public SymbolTableMethodItem(String name, ArrayList<Type> argTypes , Type returnType) {
         this.name = name;
         this.argTypes = argTypes;
         this.returnType = returnType;

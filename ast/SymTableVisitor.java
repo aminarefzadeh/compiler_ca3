@@ -58,12 +58,12 @@ public class SymTableVisitor implements Visitor {
       }
       if(sorted.size()!=classes.size()){
         System.out.println("errors in class dependency");
-        return false;
+        //return false;
       }
-      else{
-        program.setClasses(sorted);
-        return true;
-      }
+      // else{
+      program.setClasses(sorted);
+      return true;
+      //}
       //indexOf
     }
 
@@ -180,7 +180,7 @@ public class SymTableVisitor implements Visitor {
           }
 
           try{
-            SymbolTableMethodItem methodItem = new SymbolTableMethodItem(item.getName().getName() , argsType);
+            SymbolTableMethodItem methodItem = new SymbolTableMethodItem(item.getName().getName() , argsType , item.getReturnType());
             classSymTable.put(methodItem);
           }
           catch(ItemAlreadyExistsException e){
@@ -192,7 +192,7 @@ public class SymTableVisitor implements Visitor {
               flag=Boolean.FALSE;
               item.getName().setName(new String("#Temporary_"+firstName+"_"+postIndex));
               try{
-                SymbolTableMethodItem methodItem = new SymbolTableMethodItem(item.getName().getName(),argsType);
+                SymbolTableMethodItem methodItem = new SymbolTableMethodItem(item.getName().getName() , argsType , item.getReturnType());
                 classSymTable.put(methodItem);
               }
               catch(ItemAlreadyExistsException e1){
@@ -357,7 +357,7 @@ public class SymTableVisitor implements Visitor {
     @Override
     public void visit(Assign assign) {
         assign.getlValue().accept(this);
-        assign.getrValue().accept(this);
+        //assign.getrValue().accept(this);
     }
 
     @Override
@@ -371,7 +371,8 @@ public class SymTableVisitor implements Visitor {
     public void visit(Conditional conditional) {
         conditional.getExpression().accept(this);
         conditional.getConsequenceBody().accept(this);
-        conditional.getAlternativeBody().accept(this);
+        if(conditional.getAlternativeBody()!=null)
+          conditional.getAlternativeBody().accept(this);
     }
 
     @Override

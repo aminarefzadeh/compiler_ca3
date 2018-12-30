@@ -48,6 +48,8 @@ public class Phase3Visitor implements Visitor {
       else{
         UserDefinedType tt1 = (UserDefinedType) t1;
         UserDefinedType tt2 = (UserDefinedType) t2;
+        if(tt1.getClassDeclaration()==null || tt2.getClassDeclaration()==null)
+          return true;
         if (tt1.getName().getName() == tt2.getName().getName())
           return true;
         else{
@@ -281,11 +283,15 @@ public class Phase3Visitor implements Visitor {
     @Override
     public void visit(MethodCall methodCall) {
         methodCall.getInstance().accept(this);
-        methodCall.getMethodName().accept(this);
+        //methodCall.getMethodName().accept(this);
         for(Expression exp : methodCall.getArgs()){
           exp.accept(this);
         }
         SymbolTable calledClass ;
+        if(methodCall.getInstance().getType() == null){
+          methodCall.setType(null);
+          return;
+        }
         try{
           calledClass = this.programSymTable.get( ((UserDefinedType)(methodCall.getInstance().getType())).getName().getName());
         }
@@ -304,29 +310,56 @@ public class Phase3Visitor implements Visitor {
           calledMethod = (SymbolTableMethodItem)(calledClass.get(methodCall.getMethodName().getName()));
         }
         catch(ItemNotFoundException e){
-          this.errors.add(new Error(new String("there is no method named "+methodCall.getMethodName().getName()+" in class "+((UserDefinedType)(methodCall.getInstance().getType())).getClassDeclaration().getName().getName()),methodCall.getLine()));
+          this.errors.add(new Error(new String("there is no method named "+methodCall.getMethodName().getName()+" in class "+((UserDefinedType)(methodCall.getInstance().getType())).getName().getName()),methodCall.getLine()));
           methodCall.setType(null);
           return;
         }
 
-        if(methodCall.getArgs().size() != calledMethod.getArgs().size()){
-          //this.errors.add(new Error(new String("invalid argumants for method "+methodCall.getMethodName().getName()+" in class "+methodCall.getInstance().getType().getClassDeclaration().getName().getName()),methodCall.getLine()));
+        if(methodCall.getArgs().size() != calledMethod.getArgs().size() && methodCall.getArgs().size()!=0){
+          this.errors.add(new Error(new String("invalid argumants for method "+methodCall.getMethodName().getName()+" in class "+((UserDefinedType)(methodCall.getInstance().getType())).getName().getName()),methodCall.getLine()));
           methodCall.setType(null);
           return;
         }
         for(int i=0 ;i<methodCall.getArgs().size();i++){
           if(!this.isSubType(methodCall.getArgs().get(i).getType() , calledMethod.getArgs().get(i))) {
-            //this.errors.add(new Error(new String("invalid argumants for method "+methodCall.getMethodName().getName()+" in class "+methodCall.getInstance().getType().getClassDeclaration().getName().getName()),methodCall.getLine()));
+            this.errors.add(new Error(new String("invalid argumants for method "+methodCall.getMethodName().getName()+" in class "+((UserDefinedType)(methodCall.getInstance().getType())).getName().getName()),methodCall.getLine()));
             methodCall.setType(null);
             return;
           }
         }
+        //System.out.println("type of method call set to " + calledMethod.getReturnType().toString());
         methodCall.setType(calledMethod.getReturnType());
     }
 
     @Override
     public void visit(NewClass newClass) {
-        newClass.getClassName().accept(this);
+        //newClass.getClassName().accept(this);
+        //System.out.println("here2");
+        UserDefinedType returnType = new UserDefinedType();
+        returnType.setName(newClass.getClassName());
+        returnType.setClassDeclaration(null);
+        SymbolTable calledClass ;
+        try{
+          calledClass = this.programSymTable.get(newClass.getClassName().getName());
+        }
+        catch(Exception e){
+          this.errors.add(new Error(new String("undefined class"),newClass.getClassName().getLine()));
+          //System.out.println("error1");
+          newClass.setType(returnType);
+          return;
+        }
+        if(calledClass == null){
+          this.errors.add(new Error(new String("class "+ newClass.getClassName().getName()+" is not declared"),newClass.getClassName().getLine()));
+          //System.out.println("error2");
+          newClass.setType(returnType);
+          return;
+        }
+        for (ClassDeclaration cls : this.program.getClasses()){
+          if (cls.getName().getName() == newClass.getClassName().getName()){
+            returnType.setClassDeclaration(cls);
+          }
+        }
+        newClass.setType(returnType);
     }
 
     @Override
@@ -375,13 +408,13 @@ public class Phase3Visitor implements Visitor {
     @Override
     public void visit(Assign assign) {
         assign.getlValue().accept(this);
-        assign.getrValue().accept(this);
-        if(!(assign.getlValue() instanceof Identifier) && !(assign.getlValue() instanceof ArrayCall)){
-          this.errors.add(new Error(new String("left side of assignment must be a valid lvalue"),assign.getLine()));
-        }
-        else if(!this.isSubType(assign.getrValue().getType(),assign.getlValue().getType())){
-          this.errors.add(new Error(new String("right side of assignment must be a subtype"),assign.getLine()));
-        }
+        //assign.getrValue().accept(this);
+        // if(!(assign.getlValue() instanceof Identifier) && !(assign.getlValue() instanceof ArrayCall)){
+        //   this.errors.add(new Error(new String("left side of assignment must be a valid lvalue"),assign.getLine()));
+        // }
+        // else if(!this.isSubType(assign.getrValue().getType(),assign.getlValue().getType())){
+        //   this.errors.add(new Error(new String("right side of assignment must be a subtype"),assign.getLine()));
+        // }
     }
 
     @Override
@@ -396,7 +429,8 @@ public class Phase3Visitor implements Visitor {
     public void visit(Conditional conditional) {
         conditional.getExpression().accept(this);
         conditional.getConsequenceBody().accept(this);
-        conditional.getAlternativeBody().accept(this);
+        if(conditional.getAlternativeBody()!=null)
+          conditional.getAlternativeBody().accept(this);
         if(!this.isSubType(conditional.getExpression().getType() , new BooleanType())){
           this.errors.add(new Error(new String("condition type must be boolean"),conditional.getLine()));
         }
@@ -414,7 +448,7 @@ public class Phase3Visitor implements Visitor {
     @Override
     public void visit(Write write) {
         write.getArg().accept(this);
-        if(!this.isSubType(write.getArg().getType() , new IntType()) || !this.isSubType(write.getArg().getType() , new StringType()) || !this.isSubType(write.getArg().getType() , new ArrayType())){
+        if(!this.isSubType(write.getArg().getType() , new IntType()) && !this.isSubType(write.getArg().getType() , new StringType()) && !this.isSubType(write.getArg().getType() , new ArrayType())){
           this.errors.add(new Error(new String("unsupported type for writeln"),write.getLine()));
         }
     }

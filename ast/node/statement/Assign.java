@@ -7,9 +7,8 @@ public class Assign extends Statement {
     private Expression lValue;
     private Expression rValue;
 
-    public Assign(Expression lValue, Expression rValue) {
+    public Assign(Expression lValue) {
         this.lValue = lValue;
-        this.rValue = rValue;
     }
 
     public Expression getlValue() {

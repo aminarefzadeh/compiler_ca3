@@ -90,7 +90,7 @@ statementWrite returns [Write sWr]:
 ;
 
 statementAssignment returns [Assign sAssign]:
-    expression ';' { $sAssign = new Assign(((BinaryExpression) $expression.e).getLeft(), ((BinaryExpression) $expression.e).getRight()); $sAssign.setLine($expression.e.getLine());}
+    expression ';' { $sAssign = new Assign($expression.e); $sAssign.setLine($expression.e.getLine());}
 ;
 
 expression returns [Expression e]:
@@ -404,9 +404,6 @@ expressionOther returns [Expression e]
     }
     | 'new ' identifier '(' ')' {
         $e = new NewClass($identifier.id);
-        UserDefinedType a = new UserDefinedType();
-        a.setName($identifier.id);
-        $e.setType(a);
     }
     | 'this' {
         $e = new This();
